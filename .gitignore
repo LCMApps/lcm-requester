@@ -1,0 +1,8 @@
+/node_modules
+/coverage
+.idea
+package-lock.json
+*.iml
+
+# MUST be the last line of this file
+!.gitkeep
