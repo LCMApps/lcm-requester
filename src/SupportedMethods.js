@@ -26,14 +26,14 @@ function assertTimeout(timeoutMsec) {
 }
 
 function assertSerializable(params) {
-    if (typeof params === 'undefined') {
+    if (params === undefined) {
         throw new TypeError('POST body must be explicitly specified');
     }
 
     if (
-        typeof params !== 'string' && typeof params !== 'boolean' &&
-        typeof params !== 'number' && typeof params !== 'object' &&
-        !_.isPlainObject(params)
+        !_.isPlainObject(params) && !_.isNull(params) &&
+        !_.isString(params) && !_.isBoolean(params) &&
+        !_.isNumber(params) && !_.isArray(params)
     ) {
         throw new TypeError('params must be serializable value');
     }
@@ -48,13 +48,14 @@ module.exports = function (globalSettings) {
         getRequest: function getRequest(url, params, timeoutMsec = undefined) {
             return Promise.resolve()
                 .then(() => {
-                    assertTimeout(timeoutMsec);
+                    const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
+                    assertTimeout(timeout);
 
                     const opts = {
                         url: url,
                         method: 'GET',
                         json: true,
-                        timeout: timeoutMsec ? timeoutMsec : globalSettings.getTimeout()
+                        timeout: timeout
                     };
 
                     if (params !== undefined && (!_.isPlainObject(params) || _.isArray(params))) {
@@ -75,11 +76,13 @@ module.exports = function (globalSettings) {
         postFormUrlencodedRequest: function postFormUrlencodedRequest(url, params, timeoutMsec = undefined) {
             return Promise.resolve()
                 .then(() => {
-                    assertTimeout(timeoutMsec);
+                    const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
+                    assertTimeout(timeout);
+
                     const opts = {
                         url: url,
                         method: 'POST',
-                        timeout: timeoutMsec ? timeoutMsec : globalSettings.getTimeout()
+                        timeout: timeout
                     };
 
                     if (params !== undefined && (!_.isPlainObject(params) || _.isArray(params))) {
@@ -108,11 +111,13 @@ module.exports = function (globalSettings) {
         postJsonRequest: function postJsonRequest(url, params, timeoutMsec = undefined) {
             return Promise.resolve()
                 .then(() => {
-                    assertTimeout(timeoutMsec);
+                    const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
+                    assertTimeout(timeout);
+
                     const opts = {
                         url: url,
                         method: 'POST',
-                        timeout: timeoutMsec ? timeoutMsec : globalSettings.getTimeout(),
+                        timeout: timeout,
                         json: true
                     };
 
@@ -130,13 +135,14 @@ module.exports = function (globalSettings) {
         deleteRequest: function getRequest(url, params, timeoutMsec = undefined) {
             return Promise.resolve()
                 .then(() => {
-                    assertTimeout(timeoutMsec);
+                    const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
+                    assertTimeout(timeout);
 
                     const opts = {
                         url: url,
                         method: 'DELETE',
                         json: true,
-                        timeout: timeoutMsec ? timeoutMsec : globalSettings.getTimeout()
+                        timeout: timeout
                     };
 
                     if (params !== undefined && (!_.isPlainObject(params) || _.isArray(params))) {
