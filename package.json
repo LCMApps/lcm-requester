@@ -13,7 +13,6 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "app-module-path": "^2.2.0",
     "lodash": "^4.17.4",
     "request": "^2.81.0"
   },
