@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const {InvalidResponseFormatError} = require('./src/Error');
+const {InvalidResponseFormatError} = require('./Error');
 
 function assertResponseBody(response) {
     if (!_.isObject(response.responseBody)) {

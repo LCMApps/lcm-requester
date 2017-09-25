@@ -3,7 +3,7 @@
 const _ = require('lodash');
 const request = require('request');
 const GlobalSettings = require('./GlobalSettings');
-const {assertResponse} = require('./src/ResponseAssert');
+const {assertResponse} = require('./ResponseAssert');
 const {RequestError} = require('./Error');
 
 
