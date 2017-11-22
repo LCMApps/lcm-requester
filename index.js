@@ -11,7 +11,7 @@ module.exports = {
     getTimeout: globalSettings.getTimeout.bind(globalSettings),
     setTimeout: globalSettings.setTimeout.bind(globalSettings),
     getRequest: supportedMethods.getRequest,
-    postFormUrlecodedRequest: supportedMethods.postFormUrlencodedRequest,
+    postFormUrlencodedRequest: supportedMethods.postFormUrlencodedRequest,
     postJsonRequest: supportedMethods.postJsonRequest,
     deleteRequest: supportedMethods.deleteRequest,
     assertResponse: ResponseAssert.assertResponse,
