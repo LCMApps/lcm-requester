@@ -10,7 +10,7 @@ const supportedMethods = require('./src/SupportedMethods')(globalSettings);
 module.exports = {
     getTimeout: globalSettings.getTimeout.bind(globalSettings),
     setTimeout: globalSettings.setTimeout.bind(globalSettings),
-    getRequest: supportedMethods.postFormUrlecodedRequest,
+    getRequest: supportedMethods.getRequest,
     postFormUrlecodedRequest: supportedMethods.postFormUrlencodedRequest,
     postJsonRequest: supportedMethods.postJsonRequest,
     deleteRequest: supportedMethods.deleteRequest,
