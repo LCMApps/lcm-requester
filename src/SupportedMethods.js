@@ -2,10 +2,15 @@
 
 const _ = require('lodash');
 const request = require('request');
+const urlParse= require('url-parse');
+
+const {lookup} = require('dns-lookup-cache');
+
 const GlobalSettings = require('./GlobalSettings');
 const {assertResponse} = require('./ResponseAssert');
 const {RequestError} = require('./Error');
 
+const supportedIpFamily = 4;
 
 function promisifiedRequest(options) {
     return new Promise((resolve, reject) => {
@@ -51,11 +56,18 @@ module.exports = function (globalSettings) {
                     const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
                     assertTimeout(timeout);
 
+                    const {host} = urlParse(url, true);
+
                     const opts = {
                         url: url,
                         method: 'GET',
                         json: true,
-                        timeout: timeout
+                        timeout: timeoutMsec,
+                        headers: {
+                            'Host': host
+                        },
+                        lookup: lookup,
+                        family: supportedIpFamily
                     };
 
                     if (params !== undefined && (!_.isPlainObject(params) || _.isArray(params))) {
@@ -79,10 +91,17 @@ module.exports = function (globalSettings) {
                     const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
                     assertTimeout(timeout);
 
+                    const {host} = urlParse(url, true);
+
                     const opts = {
                         url: url,
                         method: 'POST',
-                        timeout: timeout
+                        timeout: timeout,
+                        headers: {
+                            'Host': host
+                        },
+                        lookup: lookup,
+                        family: supportedIpFamily
                     };
 
                     if (params !== undefined && (!_.isPlainObject(params) || _.isArray(params))) {
@@ -114,11 +133,18 @@ module.exports = function (globalSettings) {
                     const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
                     assertTimeout(timeout);
 
+                    const {host} = urlParse(url, true);
+
                     const opts = {
                         url: url,
                         method: 'POST',
                         timeout: timeout,
-                        json: true
+                        json: true,
+                        headers: {
+                            'Host': host
+                        },
+                        lookup: lookup,
+                        family: supportedIpFamily
                     };
 
                     assertSerializable(params);
@@ -138,11 +164,18 @@ module.exports = function (globalSettings) {
                     const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
                     assertTimeout(timeout);
 
+                    const {host} = urlParse(url, true);
+
                     const opts = {
                         url: url,
                         method: 'DELETE',
                         json: true,
-                        timeout: timeout
+                        timeout: timeout,
+                        headers: {
+                            'Host': host
+                        },
+                        lookup: lookup,
+                        family: supportedIpFamily
                     };
 
                     if (params !== undefined && (!_.isPlainObject(params) || _.isArray(params))) {
