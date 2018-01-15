@@ -2,7 +2,6 @@
 
 const _ = require('lodash');
 const request = require('request');
-const urlParse= require('url-parse');
 
 const {lookup} = require('dns-lookup-cache');
 
@@ -56,16 +55,11 @@ module.exports = function (globalSettings) {
                     const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
                     assertTimeout(timeout);
 
-                    const {host} = urlParse(url, true);
-
                     const opts = {
                         url: url,
                         method: 'GET',
                         json: true,
-                        timeout: timeoutMsec,
-                        headers: {
-                            'Host': host
-                        },
+                        timeout: timeout,
                         lookup: lookup,
                         family: supportedIpFamily
                     };
@@ -91,15 +85,10 @@ module.exports = function (globalSettings) {
                     const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
                     assertTimeout(timeout);
 
-                    const {host} = urlParse(url, true);
-
                     const opts = {
                         url: url,
                         method: 'POST',
                         timeout: timeout,
-                        headers: {
-                            'Host': host
-                        },
                         lookup: lookup,
                         family: supportedIpFamily
                     };
@@ -133,16 +122,11 @@ module.exports = function (globalSettings) {
                     const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
                     assertTimeout(timeout);
 
-                    const {host} = urlParse(url, true);
-
                     const opts = {
                         url: url,
                         method: 'POST',
                         timeout: timeout,
                         json: true,
-                        headers: {
-                            'Host': host
-                        },
                         lookup: lookup,
                         family: supportedIpFamily
                     };
@@ -164,16 +148,11 @@ module.exports = function (globalSettings) {
                     const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
                     assertTimeout(timeout);
 
-                    const {host} = urlParse(url, true);
-
                     const opts = {
                         url: url,
                         method: 'DELETE',
                         json: true,
                         timeout: timeout,
-                        headers: {
-                            'Host': host
-                        },
                         lookup: lookup,
                         family: supportedIpFamily
                     };
