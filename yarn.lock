@@ -1025,9 +1025,9 @@ longest@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/longest/-/longest-1.0.1.tgz#30a0b2da38f73770e8294a0d22e6625ed77d0097"
 
-"lookup-dns-cache@git+ssh://git@gitlab.auroraglobal.com:26/node-modules/lookup-dns-cache.git#1.0.0":
-  version "1.0.0"
-  resolved "git+ssh://git@gitlab.auroraglobal.com:26/node-modules/lookup-dns-cache.git#fcf21c5e4bf1b3a2c89f2df00527a6c1a660600e"
+dns-lookup-cache@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/dns-lookup-cache/-/dns-lookup-cache-2.0.0.tgz#8daea56ee429089f6c0f82478cd4f6d3a29bba17"
   dependencies:
     lodash "4.17.4"
     rr "0.1.0"
