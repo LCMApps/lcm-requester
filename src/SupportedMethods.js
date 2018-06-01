@@ -61,7 +61,8 @@ module.exports = function (globalSettings) {
                         json: true,
                         timeout: timeout,
                         lookup: lookup,
-                        family: supportedIpFamily
+                        family: supportedIpFamily,
+                        time: globalSettings.getTiming()
                     };
 
                     if (params !== undefined && (!_.isPlainObject(params) || _.isArray(params))) {
@@ -90,7 +91,8 @@ module.exports = function (globalSettings) {
                         method: 'POST',
                         timeout: timeout,
                         lookup: lookup,
-                        family: supportedIpFamily
+                        family: supportedIpFamily,
+                        time: globalSettings.getTiming()
                     };
 
                     if (params !== undefined && (!_.isPlainObject(params) || _.isArray(params))) {
@@ -105,8 +107,7 @@ module.exports = function (globalSettings) {
                 })
                 .then(response => {
                     try {
-                        const parsed = JSON.parse(response.responseBody);
-                        response.responseBody = parsed;
+                        response.responseBody = JSON.parse(response.responseBody);
                     } catch (err) {
                         // validator will catch it
                     }
@@ -128,7 +129,8 @@ module.exports = function (globalSettings) {
                         timeout: timeout,
                         json: true,
                         lookup: lookup,
-                        family: supportedIpFamily
+                        family: supportedIpFamily,
+                        time: globalSettings.getTiming()
                     };
 
                     assertSerializable(params);
@@ -154,7 +156,8 @@ module.exports = function (globalSettings) {
                         json: true,
                         timeout: timeout,
                         lookup: lookup,
-                        family: supportedIpFamily
+                        family: supportedIpFamily,
+                        time: globalSettings.getTiming()
                     };
 
                     if (params !== undefined && (!_.isPlainObject(params) || _.isArray(params))) {

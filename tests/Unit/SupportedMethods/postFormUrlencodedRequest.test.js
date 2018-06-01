@@ -3,6 +3,7 @@ const sinon = require('sinon');
 const dataDriven = require('data-driven');
 const {assert} = require('chai');
 const proxyquire = require('proxyquire').noCallThru();
+const {lookup} = require('dns-lookup-cache');
 
 const testData = require('tests/Unit/SupportedMethods/postFormUrlecodedRequest.data');
 const GlobalSettings = require('src/GlobalSettings');
@@ -16,7 +17,7 @@ describe('Unit: SupportedMethods::postFormUrlecodedRequest', () => {
     const assertResponseStub = sinon.stub();
     const SupportedMethodsInitializer = proxyquire('src/SupportedMethods', {
         request: requestStub,
-        'src/ResponseAssert': {
+        './ResponseAssert': {
             assertResponse: assertResponseStub
         }
     });
@@ -115,6 +116,9 @@ describe('Unit: SupportedMethods::postFormUrlecodedRequest', () => {
                 method: 'POST',
                 timeout: expectedTimeout,
                 url: 'http://127.0.0.1/path',
+                lookup: lookup,
+                family: 4,
+                time: false
             };
 
             if (ctx.params && !_.isEmpty(ctx.params)) {

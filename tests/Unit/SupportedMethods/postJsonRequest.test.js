@@ -3,6 +3,7 @@ const sinon = require('sinon');
 const dataDriven = require('data-driven');
 const {assert} = require('chai');
 const proxyquire = require('proxyquire').noCallThru();
+const {lookup} = require('dns-lookup-cache');
 
 const testData = require('tests/Unit/SupportedMethods/postJsonRequest.data');
 const GlobalSettings = require('src/GlobalSettings');
@@ -16,7 +17,7 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
     const assertResponseStub = sinon.stub();
     const SupportedMethodsInitializer = proxyquire('src/SupportedMethods', {
         request: requestStub,
-        'src/ResponseAssert': {
+        './ResponseAssert': {
             assertResponse: assertResponseStub
         }
     });
@@ -131,7 +132,10 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
                 timeout: expectedTimeout,
                 url: 'http://127.0.0.1/path',
                 json: true,
-                body: _.cloneDeep(ctx.params)
+                body: _.cloneDeep(ctx.params),
+                lookup: lookup,
+                family: 4,
+                time: false
             };
 
             requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);

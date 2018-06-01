@@ -15,7 +15,7 @@ InvalidResponseFormatErrorStub.callsFake((...args) => {
 });
 
 const {assertResponse} = proxyquire('src/ResponseAssert', {
-    'src/Error': {
+    './Error': {
         InvalidResponseFormatError: InvalidResponseFormatErrorStub
     }
 });

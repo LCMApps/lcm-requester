@@ -3,6 +3,7 @@ const sinon = require('sinon');
 const dataDriven = require('data-driven');
 const {assert} = require('chai');
 const proxyquire = require('proxyquire').noCallThru();
+const {lookup} = require('dns-lookup-cache');
 
 const testData = require('tests/Unit/SupportedMethods/deleteRequests.data');
 const GlobalSettings = require('src/GlobalSettings');
@@ -16,7 +17,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
     const assertResponseStub = sinon.stub();
     const SupportedMethodsInitializer = proxyquire('src/SupportedMethods', {
         request: requestStub,
-        'src/ResponseAssert': {
+        './ResponseAssert': {
             assertResponse: assertResponseStub
         }
     });
@@ -116,6 +117,9 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
                 method: 'DELETE',
                 timeout: expectedTimeout,
                 url: 'http://127.0.0.1/path',
+                lookup: lookup,
+                family: 4,
+                time: false
             };
 
             if (ctx.params && !_.isEmpty(ctx.params)) {
@@ -127,7 +131,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
             return deleteRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
                 .then(response => {
                     assert.isTrue(requestStub.calledOnce);
-                    assert.deepEqual(requestStub.firstCall.args[0], expectedRequestStubOpts);
+                    assert.containsAllKeys(requestStub.firstCall.args[0], expectedRequestStubOpts);
                     assert.isObject(response);
                     assert.deepEqual(response, expectedResponse);
                     assert.isTrue(assertResponseStub.calledOnce);

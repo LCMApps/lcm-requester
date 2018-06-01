@@ -3,6 +3,7 @@
 class GlobalSettings {
     constructor() {
         this.timeoutMsec = 30000;
+        this.timing = false;
     }
 
     getTimeout() {
@@ -15,6 +16,18 @@ class GlobalSettings {
         }
 
         this.timeoutMsec = timeoutMsec;
+    }
+
+    getTiming() {
+        return this.timing;
+    }
+
+    setTiming(timing) {
+        if (typeof timing !== 'boolean') {
+            throw new TypeError('timing must be a boolean');
+        }
+
+        this.timing = timing;
     }
 }
 

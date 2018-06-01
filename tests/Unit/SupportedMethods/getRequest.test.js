@@ -16,7 +16,7 @@ describe('Unit: SupportedMethods::postFormUrlecodedRequest', () => {
     const assertResponseStub = sinon.stub();
     const SupportedMethodsInitializer = proxyquire('src/SupportedMethods', {
         request: requestStub,
-        'src/ResponseAssert': {
+        './ResponseAssert': {
             assertResponse: assertResponseStub
         }
     });
@@ -127,7 +127,7 @@ describe('Unit: SupportedMethods::postFormUrlecodedRequest', () => {
             return getRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
                 .then(response => {
                     assert.isTrue(requestStub.calledOnce);
-                    assert.deepEqual(requestStub.firstCall.args[0], expectedRequestStubOpts);
+                    assert.containsAllKeys(requestStub.firstCall.args[0], expectedRequestStubOpts);
                     assert.isObject(response);
                     assert.deepEqual(response, expectedResponse);
                     assert.isTrue(assertResponseStub.calledOnce);
