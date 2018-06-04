@@ -3,8 +3,8 @@
 const ExtendableError = require('./ExtendableError');
 
 class RequestError extends ExtendableError {
-    constructor(parentError, url) {
-        super(`Error happened: ${parentError.message}`, {parentError, url});
+    constructor(parentError, meta) {
+        super(`Error happened: ${parentError.message}`, {parentError, meta});
     }
 }
 

@@ -13,12 +13,18 @@ const supportedIpFamily = 4;
 
 function promisifiedRequest(options) {
     return new Promise((resolve, reject) => {
+        const meta = {
+            url: options.url
+        };
+
         request(options, (err, response, responseBody) => {
             if (err) {
-                return reject(new RequestError(err, options.url));
+                return reject(new RequestError(err, meta));
             }
 
             resolve({ response, responseBody });
+        }).on('socket', socket => {
+            meta.remoteAddress = socket.remoteAddress;
         });
     });
 }
