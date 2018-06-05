@@ -26,7 +26,7 @@ function promisifiedRequest(options) {
         }).on('socket', socket => {
             socket.on('lookup', (err, address) => {
                 if (address) {
-                    meta.remoteAddress = socket.remoteAddress;
+                    meta.remoteAddress = address;
                 }
             });
         });
