@@ -24,7 +24,11 @@ function promisifiedRequest(options) {
 
             resolve({ response, responseBody });
         }).on('socket', socket => {
-            meta.remoteAddress = socket.remoteAddress;
+            socket.on('lookup', (err, address) => {
+                if (address) {
+                    meta.remoteAddress = socket.remoteAddress;
+                }
+            });
         });
     });
 }
