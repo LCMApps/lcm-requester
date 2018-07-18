@@ -1029,9 +1029,9 @@ longest@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/longest/-/longest-1.0.1.tgz#30a0b2da38f73770e8294a0d22e6625ed77d0097"
 
-dns-lookup-cache@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/dns-lookup-cache/-/dns-lookup-cache-2.0.0.tgz#8daea56ee429089f6c0f82478cd4f6d3a29bba17"
+dns-lookup-cache@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/dns-lookup-cache/-/dns-lookup-cache-1.0.1.tgz#6557cf3da6157da1dd2830704845d1a8a0d18ae7"
   dependencies:
     lodash "4.17.4"
     rr "0.1.0"
