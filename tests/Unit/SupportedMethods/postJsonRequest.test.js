@@ -30,7 +30,7 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
 
     it('params must be explicitly specified', () => {
         const expectedErrType = TypeError;
-        const expectedErrMessage = 'POST body must be explicitly specified';
+        const expectedErrMessage = 'Request body must be explicitly specified';
 
         return postJsonRequest('http://127.0.0.1/path')
             .then(() => {

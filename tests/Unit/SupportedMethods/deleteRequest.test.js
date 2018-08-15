@@ -50,7 +50,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
             const expectedErrType = TypeError;
             const expectedErrMessage = 'timeout must be a positive integer';
 
-            return deleteRequest('http://127.0.0.1/path', undefined, ctx.value)
+            return deleteRequest('http://127.0.0.1/path', undefined, {}, ctx.value)
                 .then(() => {
                     assert.fail('called', 'must not be called');
                 })
@@ -66,7 +66,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
         const expectedErrType = TypeError;
         const expectedErrMessage = 'timeout must be a positive integer';
 
-        return deleteRequest('http://127.0.0.1/path', undefined, -1)
+        return deleteRequest('http://127.0.0.1/path', undefined, {}, -1)
             .then(() => {
                 assert.fail('called', 'must not be called');
             })
@@ -81,7 +81,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
         const expectedErrType = TypeError;
         const expectedErrMessage = 'timeout must be a positive integer';
 
-        return deleteRequest('http://127.0.0.1/path', undefined, 12.34)
+        return deleteRequest('http://127.0.0.1/path', undefined, {}, 12.34)
             .then(() => {
                 assert.fail('called', 'must not be called');
             })
@@ -128,7 +128,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
 
             requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
-            return deleteRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
+            return deleteRequest('http://127.0.0.1/path', ctx.params, ctx.body, ctx.timeout)
                 .then(response => {
                     assert.isTrue(requestStub.calledOnce);
                     assert.containsAllKeys(requestStub.firstCall.args[0], expectedRequestStubOpts);
@@ -163,7 +163,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
 
         requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
-        return deleteRequest('http://127.0.0.1/path')
+        return deleteRequest('http://127.0.0.1/path', undefined, {})
             .catch(error => {
                 assert.isTrue(assertResponseStub.calledOnce);
                 assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));

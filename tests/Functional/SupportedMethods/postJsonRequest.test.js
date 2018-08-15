@@ -114,7 +114,7 @@ describe('Functional: SupportedMethods::postJsonRequest', () => {
         });
     });
 
-    describe('delay tests, withput nock', () => {
+    describe('delay tests, without nock', () => {
         /*
          * due to https://github.com/node-nock/nock/issues/754
          * it's not possible to test delays with nock, so we must use

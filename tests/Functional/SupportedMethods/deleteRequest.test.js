@@ -3,6 +3,7 @@ const nock = require('nock');
 const http = require('http');
 const getPort = require('get-port');
 const {assert} = require('chai');
+const dataDriven = require('data-driven');
 
 const GlobalSettings = require('src/GlobalSettings');
 const SupportedMethodsInitializer = require('src/SupportedMethods');
@@ -29,17 +30,47 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
             nock.cleanAll();
         });
 
+        const dataDrivenPayload = ['', null, true, false, 12, 12.34, [1, 2, 3], {}, {arg1: 'val1'}].map((value) => {
+            return {type: Object.prototype.toString.call(value), value: value, expectedBody: JSON.stringify(value)};
+        });
+
+        dataDriven(_.cloneDeep(dataDrivenPayload), () => {
+            it('body must be a serializable value, but {type} was passed', ctx => {
+                const expectedPath = '/path';
+                const expectedQueryString = {};
+                const requestJson = ctx.value;
+                const expectedBody = ctx.expectedBody;
+                const expectedResponse = {data: {value: 321}};
+
+                const nockInstance = nock('http://127.0.0.1')
+                    .delete(expectedPath, expectedBody)
+                    .query(_.cloneDeep(expectedQueryString))
+                    .reply(200, _.cloneDeep(expectedResponse), {
+                        'Content-Type': 'application/json'
+                    });
+
+                return deleteRequest('http://127.0.0.1/path', {}, requestJson)
+                    .then(response => {
+                        nockInstance.done();
+                        assert.property(response, 'response');
+                        assert.property(response, 'responseBody');
+                        assert.deepEqual(response.responseBody, expectedResponse);
+                    });
+            });
+        });
+
         it('request without params argument', () => {
             const expectedPath = '/path';
             const expectedQueryString = {};
+            const expectedBody = {};
             const expectedResponse = {data: {value: 321}};
 
             const nockInstance = nock('http://127.0.0.1')
-                .delete(expectedPath)
+                .delete(expectedPath, _.cloneDeep(expectedBody))
                 .query(_.cloneDeep(expectedQueryString))
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return deleteRequest('http://127.0.0.1/path')
+            return deleteRequest('http://127.0.0.1/path', undefined, {})
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -51,14 +82,15 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
         it('request with qs in path', () => {
             const expectedPath = '/path';
             const expectedQueryString = {arg1: 'val1'};
+            const expectedBody = {field: 'value'};
             const expectedResponse = {data: {value: 321}};
 
             const nockInstance = nock('http://127.0.0.1')
-                .delete(expectedPath)
+                .delete(expectedPath, _.cloneDeep(expectedBody))
                 .query(_.cloneDeep(expectedQueryString))
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return deleteRequest('http://127.0.0.1/path?arg1=val1')
+            return deleteRequest('http://127.0.0.1/path?arg1=val1', undefined, {field: 'value'})
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -70,14 +102,15 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
         it('request with qs in uri and params', () => {
             const expectedPath = '/path';
             const expectedQueryString = {arg1: 'val1'};
+            const expectedBody = {field: 'value'};
             const expectedResponse = {data: {value: 321}};
 
             const nockInstance = nock('http://127.0.0.1')
-                .delete(expectedPath)
+                .delete(expectedPath, _.cloneDeep(expectedBody))
                 .query(_.cloneDeep(expectedQueryString))
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return deleteRequest('http://127.0.0.1/path?arg1=valinuri', {arg1: 'val1'})
+            return deleteRequest('http://127.0.0.1/path?arg1=valinuri', {arg1: 'val1'}, {field: 'value'})
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -89,14 +122,15 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
         it('request with 400 response', () => {
             const expectedPath = '/path';
             const expectedQueryString = {};
+            const expectedBody = {};
             const expectedResponse = {error: {code: 1, message: 'some message'}};
 
             const nockInstance = nock('http://127.0.0.1')
-                .delete(expectedPath)
+                .delete(expectedPath, _.cloneDeep(expectedBody))
                 .query(_.cloneDeep(expectedQueryString))
                 .reply(400, _.cloneDeep(expectedResponse));
 
-            return deleteRequest('http://127.0.0.1/path', {})
+            return deleteRequest('http://127.0.0.1/path', {}, {})
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -108,15 +142,16 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
         it('request with emitted request error', () => {
             const expectedPath = '/path';
             const expectedQueryString = {};
+            const expectedBody = {};
             const expectedErrorType = RequestError;
             const expectedErrorMessage = 'message';
 
             const nockInstance = nock('http://127.0.0.1')
-                .delete(expectedPath)
+                .delete(expectedPath, _.cloneDeep(expectedBody))
                 .query(_.cloneDeep(expectedQueryString))
                 .replyWithError(expectedErrorMessage);
 
-            return deleteRequest('http://127.0.0.1/path', {})
+            return deleteRequest('http://127.0.0.1/path', {}, {})
                 .catch(error => {
                     nockInstance.done();
                     assert.instanceOf(error, expectedErrorType);

@@ -41,7 +41,7 @@ function assertTimeout(timeoutMsec) {
 
 function assertSerializable(params) {
     if (params === undefined) {
-        throw new TypeError('POST body must be explicitly specified');
+        throw new TypeError('Request body must be explicitly specified');
     }
 
     if (
@@ -154,7 +154,7 @@ module.exports = function (globalSettings) {
                     return response;
                 });
         },
-        deleteRequest: function getRequest(url, params, timeoutMsec = undefined) {
+        deleteRequest: function deleteRequest(url, params, body, timeoutMsec = undefined) {
             return Promise.resolve()
                 .then(() => {
                     const timeout = timeoutMsec ? timeoutMsec : globalSettings.getTimeout();
@@ -177,6 +177,9 @@ module.exports = function (globalSettings) {
                     if (params !== undefined && !_.isEmpty(params)) {
                         opts.qs = params;
                     }
+
+                    assertSerializable(body);
+                    opts.body = body;
 
                     return promisifiedRequest(opts);
                 })
