@@ -62,7 +62,7 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
         it('request without params argument', () => {
             const expectedPath = '/path';
             const expectedQueryString = {};
-            const expectedBody = {};
+            const expectedBody = undefined;
             const expectedResponse = {data: {value: 321}};
 
             const nockInstance = nock('http://127.0.0.1')
@@ -70,7 +70,7 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
                 .query(_.cloneDeep(expectedQueryString))
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return deleteRequest('http://127.0.0.1/path', undefined, {})
+            return deleteRequest('http://127.0.0.1/path')
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
