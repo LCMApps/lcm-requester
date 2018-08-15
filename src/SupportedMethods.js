@@ -178,7 +178,15 @@ module.exports = function (globalSettings) {
                         opts.qs = params;
                     }
 
-                    assertSerializable(body);
+                    if (
+                        body !== undefined &&
+                        !_.isPlainObject(body) && !_.isNull(body) &&
+                        !_.isString(body) && !_.isBoolean(body) &&
+                        !_.isNumber(body) && !_.isArray(body)
+                    ) {
+                        throw new TypeError('body must be serializable value');
+                    }
+
                     opts.body = body;
 
                     return promisifiedRequest(opts);
