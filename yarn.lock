@@ -405,9 +405,9 @@ diff@3.5.0, diff@^3.5.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.5.0.tgz#800c0dd1e0a8bfbc95835c202ad220fe317e5a12"
 
-dns-lookup-cache@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/dns-lookup-cache/-/dns-lookup-cache-1.0.2.tgz#81f36b0d7ea032e966fbded33b5b3acc376dd551"
+dns-lookup-cache@1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/dns-lookup-cache/-/dns-lookup-cache-1.0.3.tgz#4459fb5d7a05ec261455bfb244f2ebfdf7179e40"
   dependencies:
     lodash "^4.17.11"
     rr "^0.1.0"
