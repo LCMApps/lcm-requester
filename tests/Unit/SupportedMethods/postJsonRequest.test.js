@@ -135,6 +135,7 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
                 body: _.cloneDeep(ctx.params),
                 lookup: lookup,
                 family: 4,
+                agentOptions: undefined,
                 time: false
             };
 

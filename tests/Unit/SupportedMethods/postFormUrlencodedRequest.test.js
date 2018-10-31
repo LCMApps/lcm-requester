@@ -118,6 +118,7 @@ describe('Unit: SupportedMethods::postFormUrlecodedRequest', () => {
                 url: 'http://127.0.0.1/path',
                 lookup: lookup,
                 family: 4,
+                agentOptions: undefined,
                 time: false
             };
 

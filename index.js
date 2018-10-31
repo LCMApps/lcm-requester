@@ -12,6 +12,8 @@ module.exports = {
     setTimeout: globalSettings.setTimeout.bind(globalSettings),
     getTiming: globalSettings.getTiming.bind(globalSettings),
     setTiming: globalSettings.setTiming.bind(globalSettings),
+    setAgentOptions: globalSettings.setAgentOptions.bind(globalSettings),
+    getAgentOptions: globalSettings.getAgentOptions.bind(globalSettings),
     getRequest: supportedMethods.getRequest,
     postFormUrlencodedRequest: supportedMethods.postFormUrlencodedRequest,
     postJsonRequest: supportedMethods.postJsonRequest,

@@ -72,6 +72,7 @@ module.exports = function (globalSettings) {
                         timeout: timeout,
                         lookup: lookup,
                         family: supportedIpFamily,
+                        agentOptions: globalSettings.getAgentOptions(),
                         time: globalSettings.getTiming()
                     };
 
@@ -102,6 +103,7 @@ module.exports = function (globalSettings) {
                         timeout: timeout,
                         lookup: lookup,
                         family: supportedIpFamily,
+                        agentOptions: globalSettings.getAgentOptions(),
                         time: globalSettings.getTiming()
                     };
 
@@ -140,6 +142,7 @@ module.exports = function (globalSettings) {
                         json: true,
                         lookup: lookup,
                         family: supportedIpFamily,
+                        agentOptions: globalSettings.getAgentOptions(),
                         time: globalSettings.getTiming()
                     };
 
@@ -167,6 +170,7 @@ module.exports = function (globalSettings) {
                         timeout: timeout,
                         lookup: lookup,
                         family: supportedIpFamily,
+                        agentOptions: globalSettings.getAgentOptions(),
                         time: globalSettings.getTiming()
                     };
 
