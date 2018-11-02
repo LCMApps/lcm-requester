@@ -3,25 +3,22 @@ const sinon = require('sinon');
 const dataDriven = require('data-driven');
 const {assert} = require('chai');
 const proxyquire = require('proxyquire').noCallThru();
-const {lookup} = require('dns-lookup-cache');
 
-const testData = require('tests/Unit/SupportedMethods/deleteRequests.data');
-const GlobalSettings = require('src/GlobalSettings');
+const testData = require('tests/Unit/Requester/getRequests.data');
 const {InvalidResponseFormatError} = require('src/Error');
-const globalSettings = new GlobalSettings();
 
 
-describe('Unit: SupportedMethods::deleteRequest', () => {
+describe('Unit: Requester::postFormUrlecodedRequest', () => {
 
     const requestStub = sinon.stub();
     const assertResponseStub = sinon.stub();
-    const SupportedMethodsInitializer = proxyquire('src/SupportedMethods', {
+    const RequesterInitializer = proxyquire('src/Requester', {
         request: requestStub,
         './ResponseAssert': {
             assertResponse: assertResponseStub
         }
     });
-    const {deleteRequest} = SupportedMethodsInitializer(globalSettings);
+    const requester = new RequesterInitializer();
 
     afterEach(() => {
         requestStub.reset();
@@ -33,7 +30,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
             const expectedErrType = TypeError;
             const expectedErrMessage = 'params must be an object';
 
-            return deleteRequest('http://127.0.0.1/path', ctx.value)
+            return requester.getRequest('http://127.0.0.1/path', ctx.value)
                 .then(() => {
                     assert.fail('called', 'must not be called');
                 })
@@ -46,11 +43,11 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
     });
 
     dataDriven(_.cloneDeep(testData.invalidTimeoutType), () => {
-        it('timeout must be a positive int, but {type} was passed', ctx => {
+        it('timeoutMsecs must be a positive int, but {type} was passed', ctx => {
             const expectedErrType = TypeError;
-            const expectedErrMessage = 'timeout must be a positive integer';
+            const expectedErrMessage = 'timeoutMsecs must be a positive integer';
 
-            return deleteRequest('http://127.0.0.1/path', undefined, {}, ctx.value)
+            return requester.getRequest('http://127.0.0.1/path', undefined, ctx.value)
                 .then(() => {
                     assert.fail('called', 'must not be called');
                 })
@@ -62,11 +59,11 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
         });
     });
 
-    it('timeout must be a positive int, but negative int was passed', () => {
+    it('timeoutMsecs must be a positive int, but negative int was passed', () => {
         const expectedErrType = TypeError;
-        const expectedErrMessage = 'timeout must be a positive integer';
+        const expectedErrMessage = 'timeoutMsecs must be a positive integer';
 
-        return deleteRequest('http://127.0.0.1/path', undefined, {}, -1)
+        return requester.getRequest('http://127.0.0.1/path', undefined, -1)
             .then(() => {
                 assert.fail('called', 'must not be called');
             })
@@ -77,11 +74,11 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
             });
     });
 
-    it('timeout must be a positive int, but not int was passed', () => {
+    it('timeoutMsecs must be a positive int, but not int was passed', () => {
         const expectedErrType = TypeError;
-        const expectedErrMessage = 'timeout must be a positive integer';
+        const expectedErrMessage = 'timeoutMsecs must be a positive integer';
 
-        return deleteRequest('http://127.0.0.1/path', undefined, {}, 12.34)
+        return requester.getRequest('http://127.0.0.1/path', undefined, 12.34)
             .then(() => {
                 assert.fail('called', 'must not be called');
             })
@@ -114,12 +111,9 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
 
             const expectedRequestStubOpts = {
                 json: true,
-                method: 'DELETE',
+                method: 'GET',
                 timeout: expectedTimeout,
                 url: 'http://127.0.0.1/path',
-                lookup: lookup,
-                family: 4,
-                time: false
             };
 
             if (ctx.params && !_.isEmpty(ctx.params)) {
@@ -128,7 +122,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
 
             requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
-            return deleteRequest('http://127.0.0.1/path', ctx.params, ctx.body, ctx.timeout)
+            return requester.getRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
                 .then(response => {
                     assert.isTrue(requestStub.calledOnce);
                     assert.containsAllKeys(requestStub.firstCall.args[0], expectedRequestStubOpts);
@@ -163,7 +157,7 @@ describe('Unit: SupportedMethods::deleteRequest', () => {
 
         requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
-        return deleteRequest('http://127.0.0.1/path', undefined, {})
+        return requester.getRequest('http://127.0.0.1/path')
             .catch(error => {
                 assert.isTrue(assertResponseStub.calledOnce);
                 assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));

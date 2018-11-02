@@ -4,15 +4,13 @@ const http = require('http');
 const getPort = require('get-port');
 const {assert} = require('chai');
 
-const GlobalSettings = require('src/GlobalSettings');
-const SupportedMethodsInitializer = require('src/SupportedMethods');
+const Requester = require('src/Requester');
 const {RequestError} = require('src/Error');
 
-const globalSettings = new GlobalSettings();
-const {postFormUrlencodedRequest} = SupportedMethodsInitializer(globalSettings);
-
-describe('Functional: SupportedMethods::postFormUrlencodedRequest', () => {
+describe('Functional: Requester::requester.postFormUrlencodedRequest', () => {
     describe('nock based', () => {
+        const requester = new Requester();
+
         before(() => {
             nock.cleanAll();
             nock.disableNetConnect();
@@ -35,7 +33,7 @@ describe('Functional: SupportedMethods::postFormUrlencodedRequest', () => {
                 .post(expectedPath, '')
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return postFormUrlencodedRequest('http://127.0.0.1/path')
+            return requester.postFormUrlencodedRequest('http://127.0.0.1/path')
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -52,7 +50,7 @@ describe('Functional: SupportedMethods::postFormUrlencodedRequest', () => {
                 .post(expectedPath, '')
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return postFormUrlencodedRequest('http://127.0.0.1/path?arg1=val1')
+            return requester.postFormUrlencodedRequest('http://127.0.0.1/path?arg1=val1')
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -71,7 +69,7 @@ describe('Functional: SupportedMethods::postFormUrlencodedRequest', () => {
                 .post(expectedPath, expectedBody)
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return postFormUrlencodedRequest('http://127.0.0.1/path?arg1=val1', formData)
+            return requester.postFormUrlencodedRequest('http://127.0.0.1/path?arg1=val1', formData)
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -90,7 +88,7 @@ describe('Functional: SupportedMethods::postFormUrlencodedRequest', () => {
                 .post(expectedPath, expectedBody)
                 .reply(400, _.cloneDeep(expectedResponse));
 
-            return postFormUrlencodedRequest('http://127.0.0.1/path', formData)
+            return requester.postFormUrlencodedRequest('http://127.0.0.1/path', formData)
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -109,7 +107,7 @@ describe('Functional: SupportedMethods::postFormUrlencodedRequest', () => {
                 .post(expectedPath, expectedBody)
                 .replyWithError(expectedErrorMessage);
 
-            return postFormUrlencodedRequest('http://127.0.0.1/path')
+            return requester.postFormUrlencodedRequest('http://127.0.0.1/path')
                 .catch(error => {
                     nockInstance.done();
                     assert.instanceOf(error, expectedErrorType);
@@ -126,6 +124,7 @@ describe('Functional: SupportedMethods::postFormUrlencodedRequest', () => {
          * our own implementation
          */
 
+        const requester = new Requester();
         const serverTimeout = 200;
         let serverPort;
         let server;
@@ -157,7 +156,7 @@ describe('Functional: SupportedMethods::postFormUrlencodedRequest', () => {
             const timeoutMsec = serverTimeout + Math.round(serverTimeout / 2);
             const expectedResponse = {data: null};
 
-            return postFormUrlencodedRequest(`http://127.0.0.1:${serverPort}/path`, undefined, timeoutMsec)
+            return requester.postFormUrlencodedRequest(`http://127.0.0.1:${serverPort}/path`, undefined, timeoutMsec)
                 .then(response => {
                     assert.property(response, 'response');
                     assert.property(response, 'responseBody');
@@ -170,7 +169,7 @@ describe('Functional: SupportedMethods::postFormUrlencodedRequest', () => {
 
             const timeoutMsec = serverTimeout - Math.round(serverTimeout / 2);
 
-            return postFormUrlencodedRequest(`http://127.0.0.1:${serverPort}/path`, undefined, timeoutMsec)
+            return requester.postFormUrlencodedRequest(`http://127.0.0.1:${serverPort}/path`, undefined, timeoutMsec)
                 .catch(error => {
                     assert.instanceOf(error, RequestError);
                     assert.equal(error.message, 'Error happened: ESOCKETTIMEDOUT');

@@ -5,50 +5,32 @@ const {assert} = require('chai');
 const proxyquire = require('proxyquire').noCallThru();
 const {lookup} = require('dns-lookup-cache');
 
-const testData = require('tests/Unit/SupportedMethods/postJsonRequest.data');
-const GlobalSettings = require('src/GlobalSettings');
+const testData = require('tests/Unit/Requester/postFormUrlecodedRequest.data');
 const {InvalidResponseFormatError} = require('src/Error');
-const globalSettings = new GlobalSettings();
 
-
-describe('Unit: SupportedMethods::postJsonRequest', () => {
+describe('Unit: Requester::postFormUrlecodedRequest', () => {
 
     const requestStub = sinon.stub();
     const assertResponseStub = sinon.stub();
-    const SupportedMethodsInitializer = proxyquire('src/SupportedMethods', {
+    const RequesterInitializer = proxyquire('src/Requester', {
         request: requestStub,
         './ResponseAssert': {
             assertResponse: assertResponseStub
         }
     });
-    const {postJsonRequest} = SupportedMethodsInitializer(globalSettings);
+    const requester = new RequesterInitializer();
 
     afterEach(() => {
         requestStub.reset();
         assertResponseStub.reset();
     });
 
-    it('params must be explicitly specified', () => {
-        const expectedErrType = TypeError;
-        const expectedErrMessage = 'Request body must be explicitly specified';
-
-        return postJsonRequest('http://127.0.0.1/path')
-            .then(() => {
-                assert.fail('called', 'must not be called');
-            })
-            .catch(err => {
-                assert.isFalse(requestStub.called);
-                assert.instanceOf(err, expectedErrType);
-                assert.strictEqual(err.message, expectedErrMessage);
-            });
-    });
-
     dataDriven(_.cloneDeep(testData.invalidParamsType), () => {
         it('params must be an object, but {type} was passed', ctx => {
             const expectedErrType = TypeError;
-            const expectedErrMessage = 'params must be serializable value';
+            const expectedErrMessage = 'params must be an object';
 
-            return postJsonRequest('http://127.0.0.1/path', ctx.value)
+            return requester.postFormUrlencodedRequest('http://127.0.0.1/path', ctx.value)
                 .then(() => {
                     assert.fail('called', 'must not be called');
                 })
@@ -61,11 +43,11 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
     });
 
     dataDriven(_.cloneDeep(testData.invalidTimeoutType), () => {
-        it('timeout must be a positive int, but {type} was passed', ctx => {
+        it('timeoutMsecs must be a positive int, but {type} was passed', ctx => {
             const expectedErrType = TypeError;
-            const expectedErrMessage = 'timeout must be a positive integer';
+            const expectedErrMessage = 'timeoutMsecs must be a positive integer';
 
-            return postJsonRequest('http://127.0.0.1/path', null, ctx.value)
+            return requester.postFormUrlencodedRequest('http://127.0.0.1/path', undefined, ctx.value)
                 .then(() => {
                     assert.fail('called', 'must not be called');
                 })
@@ -77,11 +59,11 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
         });
     });
 
-    it('timeout must be a positive int, but negative int was passed', () => {
+    it('timeoutMsecs must be a positive int, but negative int was passed', () => {
         const expectedErrType = TypeError;
-        const expectedErrMessage = 'timeout must be a positive integer';
+        const expectedErrMessage = 'timeoutMsecs must be a positive integer';
 
-        return postJsonRequest('http://127.0.0.1/path', null, -1)
+        return requester.postFormUrlencodedRequest('http://127.0.0.1/path', undefined, -1)
             .then(() => {
                 assert.fail('called', 'must not be called');
             })
@@ -92,11 +74,11 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
             });
     });
 
-    it('timeout must be a positive int, but not int was passed', () => {
+    it('timeoutMsecs must be a positive int, but not int was passed', () => {
         const expectedErrType = TypeError;
-        const expectedErrMessage = 'timeout must be a positive integer';
+        const expectedErrMessage = 'timeoutMsecs must be a positive integer';
 
-        return postJsonRequest('http://127.0.0.1/path', null, 12.34)
+        return requester.postFormUrlencodedRequest('http://127.0.0.1/path', undefined, 12.34)
             .then(() => {
                 assert.fail('called', 'must not be called');
             })
@@ -131,16 +113,19 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
                 method: 'POST',
                 timeout: expectedTimeout,
                 url: 'http://127.0.0.1/path',
-                json: true,
-                body: _.cloneDeep(ctx.params),
                 lookup: lookup,
                 family: 4,
+                agent: requester._agent,
                 time: false
             };
 
+            if (ctx.params && !_.isEmpty(ctx.params)) {
+                expectedRequestStubOpts.form = _.cloneDeep(ctx.params);
+            }
+
             requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
-            return postJsonRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
+            return requester.postFormUrlencodedRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
                 .then(response => {
                     assert.isTrue(requestStub.calledOnce);
                     assert.deepEqual(requestStub.firstCall.args[0], expectedRequestStubOpts);
@@ -175,7 +160,7 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
 
         requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
-        return postJsonRequest('http://127.0.0.1/path', null)
+        return requester.postFormUrlencodedRequest('http://127.0.0.1/path')
             .catch(error => {
                 assert.isTrue(assertResponseStub.calledOnce);
                 assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
