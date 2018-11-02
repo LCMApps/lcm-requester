@@ -6,9 +6,9 @@ const {assert} = require('chai');
 const dataDriven = require('data-driven');
 
 const Requester = require('src/Requester');
-const {RequestError} = require('src/Error');
+const {RequestError} = require('src/Error/index');
 
-describe('Functional: Requester::requester.postJsonRequest', () => {
+describe('Functional: Requester::postJsonRequest', () => {
     describe('nock based', () => {
         const requester = new Requester();
 
@@ -168,6 +168,78 @@ describe('Functional: Requester::requester.postJsonRequest', () => {
                 .catch(error => {
                     assert.instanceOf(error, RequestError);
                     assert.equal(error.message, 'Error happened: ESOCKETTIMEDOUT');
+                });
+        });
+    });
+
+    describe('keep-alive connection', () => {
+        let requester;
+        let serverPort;
+        let server;
+
+        before((done) => {
+            getPort()
+                .then(availablePort => {
+                    serverPort = availablePort;
+                    server = http.createServer();
+
+                    server.on('request', (request, response) => {
+                        response.setHeader('Content-Type', 'application/json');
+                        response.statusCode = 200;
+                        response.write(JSON.stringify({data: null}));
+                        response.end();
+                    });
+                    server.listen(availablePort, done);
+                });
+        });
+
+        afterEach(() => {
+            requester._agent.destroy();
+        });
+
+        after((done) => {
+            server.close(done);
+        });
+
+        it('request without keep-alive connection', function () {
+            const expectedResponse = {data: null};
+            const expectedConnectionHeader = 'close';
+            const expectedAgentFreeSockets = 0;
+
+            requester = new Requester({
+                agentOptions: {
+                    keepAlive: false
+                }
+            });
+
+            return requester.postJsonRequest(`http://127.0.0.1:${serverPort}/path`, {})
+                .then(response => {
+                    assert.property(response, 'response');
+                    assert.property(response, 'responseBody');
+                    assert.deepEqual(response.responseBody, expectedResponse);
+                    assert.strictEqual(response.response.headers.connection, expectedConnectionHeader);
+                    assert.lengthOf(Object.keys(requester._agent.freeSockets), expectedAgentFreeSockets);
+                });
+        });
+
+        it('request with keep-alive connection', function () {
+            const expectedResponse = {data: null};
+            const expectedConnectionHeader = 'keep-alive';
+            const expectedAgentFreeSockets = 1;
+
+            requester = new Requester({
+                agentOptions: {
+                    keepAlive: true
+                }
+            });
+
+            return requester.postJsonRequest(`http://127.0.0.1:${serverPort}/path`, {})
+                .then(response => {
+                    assert.property(response, 'response');
+                    assert.property(response, 'responseBody');
+                    assert.deepEqual(response.responseBody, expectedResponse);
+                    assert.strictEqual(response.response.headers.connection, expectedConnectionHeader);
+                    assert.lengthOf(Object.keys(requester._agent.freeSockets), expectedAgentFreeSockets);
                 });
         });
     });
