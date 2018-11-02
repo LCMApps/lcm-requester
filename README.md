@@ -16,10 +16,53 @@ Using yarn:
 $ yarn add lcm-requester
 ```
 
+#Configuration
+All available transports and configuration options listed below:
+Parameter "agentOptions" support the same options like [HTTP Agent](https://nodejs.org/api/http.html#http_new_agent_options)
+```json
+{
+    "requester": {
+        "timeoutMsecs": 1000,
+        "timing": true,
+        "agentOptions": {
+            "keepAlive": true,
+            "keepAliveMsecs": 500,
+            "maxSockets": 10000,
+            "maxFreeSockets": 200,
+            "timeout": 2000
+        }
+    }
+}
+```
 # Super simple to use
 
 ```js
-const requester = require('lcm-requester');
+const {Requester} = require('lcm-requester');
+```
+```js
+// Use default configuration
+const requester = new Requester();
+```
+```js
+// Use custom timeout on request with timing info
+const requester = new Requester({
+    timeoutMsecs: 2000,
+    timing: true
+});
+```
+```js
+// Use custom HTTP Agent for requests
+const requester = new Requester({
+    timeoutMsecs: 2000,
+    agentOptions: {
+        keepAlive: true
+    }
+});
+```
 
-const response = await requester.getRequest('https://google.com/path?arg1=val1');
+```js
+const {response, responseBody} = await requester.getRequest('https://google.com/path?arg1=val1');
+const {response, responseBody} = await requester.postFormUrlencodedRequest('https://google.com/path?arg1=val1');
+const {response, responseBody} = await requester.postJsonRequest('https://google.com/path?arg1=val1', {});
+const {response, responseBody} = await requester.deleteRequest('https://google.com/path?arg1=val1');
 ```
