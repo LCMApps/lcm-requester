@@ -3,6 +3,7 @@ const sinon = require('sinon');
 const dataDriven = require('data-driven');
 const {assert} = require('chai');
 const proxyquire = require('proxyquire').noCallThru();
+const {lookup} = require('dns-lookup-cache');
 
 const testData = require('tests/Unit/Requester/getRequests.data');
 const {InvalidResponseFormatError} = require('src/Error');
@@ -19,10 +20,12 @@ describe('Unit: Requester::postFormUrlecodedRequest', () => {
         }
     });
     const requester = new RequesterInitializer();
+    const getAgentSpy = sinon.spy(requester, '_getAgent');
 
     afterEach(() => {
         requestStub.reset();
         assertResponseStub.reset();
+        getAgentSpy.resetHistory();
     });
 
     dataDriven(_.cloneDeep(testData.invalidParamsType), () => {
@@ -114,12 +117,16 @@ describe('Unit: Requester::postFormUrlecodedRequest', () => {
                 method: 'GET',
                 timeout: expectedTimeout,
                 url: 'http://127.0.0.1/path',
+                agent: requester._getAgent('http://127.0.0.1/path'),
+                family: 4,
+                time: false
             };
 
             if (ctx.params && !_.isEmpty(ctx.params)) {
                 expectedRequestStubOpts.qs = _.cloneDeep(ctx.params);
             }
 
+            requester._getAgent.resetHistory();
             requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
             return requester.getRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
@@ -130,8 +137,56 @@ describe('Unit: Requester::postFormUrlecodedRequest', () => {
                     assert.deepEqual(response, expectedResponse);
                     assert.isTrue(assertResponseStub.calledOnce);
                     assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
+                    assert.isTrue(getAgentSpy.calledOnce);
+                    assert.isTrue(getAgentSpy.calledWithExactly('http://127.0.0.1/path'));
+                    assert.isTrue(getAgentSpy.returned(requester._httpAgent));
                 });
         });
+    });
+
+    it('request with HTTPS protocol', () => {
+        const requestStubResponse = {
+            statusCode: 200,
+            request: {
+                href: 'https://127.0.0.1/path'
+            },
+        };
+
+        const requestStubResponseBody = {
+            data: {value: 321},
+        };
+
+        const expectedResponse = {
+            response: _.cloneDeep(requestStubResponse),
+            responseBody: _.cloneDeep(requestStubResponseBody)
+        };
+
+        const expectedRequestStubOpts = {
+            method: 'GET',
+            timeout: 30000,
+            url: 'https://127.0.0.1/path',
+            json: true,
+            lookup: lookup,
+            family: 4,
+            agent: requester._getAgent('https://127.0.0.1/path'),
+            time: false
+        };
+
+        requester._getAgent.resetHistory();
+        requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
+
+        return requester.getRequest('https://127.0.0.1/path')
+            .then(response => {
+                assert.isTrue(requestStub.calledOnce);
+                assert.deepEqual(requestStub.firstCall.args[0], expectedRequestStubOpts);
+                assert.isObject(response);
+                assert.deepEqual(response, expectedResponse);
+                assert.isTrue(assertResponseStub.calledOnce);
+                assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
+                assert.isTrue(getAgentSpy.calledOnce);
+                assert.isTrue(getAgentSpy.calledWithExactly('https://127.0.0.1/path'));
+                assert.isTrue(getAgentSpy.returned(requester._httpsAgent));
+            });
     });
 
     it('throws on failed assertResponse', () => {
@@ -163,6 +218,9 @@ describe('Unit: Requester::postFormUrlecodedRequest', () => {
                 assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
                 assert.instanceOf(error, InvalidResponseFormatError);
                 assert.deepEqual(expectedAssertErr, error);
+                assert.isTrue(getAgentSpy.calledOnce);
+                assert.isTrue(getAgentSpy.calledWithExactly('http://127.0.0.1/path'));
+                assert.isTrue(getAgentSpy.returned(requester._httpAgent));
             });
     });
 });

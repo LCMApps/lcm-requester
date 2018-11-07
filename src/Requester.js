@@ -1,7 +1,8 @@
 'use strict';
 
 const _ = require('lodash');
-const {Agent} = require('http');
+const http = require('http');
+const https = require('https');
 const request = require('request');
 const {lookup} = require('dns-lookup-cache');
 
@@ -93,11 +94,11 @@ class Requester {
             assertPositiveInteger(this._config.agentOptions.timeout, 'config.agentOptions.timeout');
         }
 
-
         this._timeoutMsecs = this._config.timeoutMsecs || DEFAULT_REQUEST_TIMEOUT;
         this._timing = this._config.timing || false;
-        this._agentOptions = this._config.agentOptions ? this._config.agentOptions : {};
-        this._agent = new Agent(this._agentOptions);
+        this._agentOptions = this._config.agentOptions ? _.cloneDeep(this._config.agentOptions) : {};
+        this._httpAgent = null;
+        this._httpsAgent = null;
     }
 
     getTimeout() {
@@ -125,7 +126,7 @@ class Requester {
                     timeout: timeout,
                     lookup: lookup,
                     family: supportedIpFamily,
-                    agent: this._agent,
+                    agent: this._getAgent(url),
                     time: this._timing
                 };
 
@@ -157,7 +158,7 @@ class Requester {
                     timeout: timeout,
                     lookup: lookup,
                     family: supportedIpFamily,
-                    agent: this._agent,
+                    agent: this._getAgent(url),
                     time: this._timing
                 };
 
@@ -197,7 +198,7 @@ class Requester {
                     json: true,
                     lookup: lookup,
                     family: supportedIpFamily,
-                    agent: this._agent,
+                    agent: this._getAgent(url),
                     time: this._timing
                 };
 
@@ -226,7 +227,7 @@ class Requester {
                     timeout: timeout,
                     lookup: lookup,
                     family: supportedIpFamily,
-                    agent: this._agent,
+                    agent: this._getAgent(url),
                     time: this._timing
                 };
 
@@ -249,6 +250,24 @@ class Requester {
                 assertResponse(response);
                 return response;
             });
+    }
+
+    _getAgent(url) {
+        const isHttps = url.startsWith('https');
+
+        if (isHttps) {
+            if (this._httpsAgent === null) {
+                this._httpsAgent = new https.Agent(this._agentOptions);
+            }
+
+            return this._httpsAgent;
+        } else {
+            if (this._httpAgent === null) {
+                this._httpAgent = new http.Agent(this._agentOptions);
+            }
+
+            return this._httpAgent;
+        }
     }
 }
 

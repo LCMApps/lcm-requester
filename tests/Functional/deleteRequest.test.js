@@ -242,7 +242,7 @@ describe('Functional: Requester::deleteRequest', () => {
         });
 
         afterEach(() => {
-            requester._agent.destroy();
+            requester._httpAgent.destroy();
         });
 
         after((done) => {
@@ -266,7 +266,7 @@ describe('Functional: Requester::deleteRequest', () => {
                     assert.property(response, 'responseBody');
                     assert.deepEqual(response.responseBody, expectedResponse);
                     assert.strictEqual(response.response.headers.connection, expectedConnectionHeader);
-                    assert.lengthOf(Object.keys(requester._agent.freeSockets), expectedAgentFreeSockets);
+                    assert.lengthOf(Object.keys(requester._httpAgent.freeSockets), expectedAgentFreeSockets);
                 });
         });
 
@@ -287,7 +287,7 @@ describe('Functional: Requester::deleteRequest', () => {
                     assert.property(response, 'responseBody');
                     assert.deepEqual(response.responseBody, expectedResponse);
                     assert.strictEqual(response.response.headers.connection, expectedConnectionHeader);
-                    assert.lengthOf(Object.keys(requester._agent.freeSockets), expectedAgentFreeSockets);
+                    assert.lengthOf(Object.keys(requester._httpAgent.freeSockets), expectedAgentFreeSockets);
                 });
         });
     });

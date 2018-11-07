@@ -20,10 +20,12 @@ describe('Unit: Requester::postJsonRequest', () => {
         }
     });
     const requester = new RequesterInitializer();
+    const getAgentSpy = sinon.spy(requester, '_getAgent');
 
     afterEach(() => {
         requestStub.reset();
         assertResponseStub.reset();
+        getAgentSpy.resetHistory();
     });
 
     it('params must be explicitly specified', () => {
@@ -133,10 +135,11 @@ describe('Unit: Requester::postJsonRequest', () => {
                 body: _.cloneDeep(ctx.params),
                 lookup: lookup,
                 family: 4,
-                agent: requester._agent,
+                agent: requester._getAgent('http://127.0.0.1/path'),
                 time: false
             };
 
+            requester._getAgent.resetHistory();
             requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
             return requester.postJsonRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
@@ -147,8 +150,57 @@ describe('Unit: Requester::postJsonRequest', () => {
                     assert.deepEqual(response, expectedResponse);
                     assert.isTrue(assertResponseStub.calledOnce);
                     assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
+                    assert.isTrue(getAgentSpy.calledOnce);
+                    assert.isTrue(getAgentSpy.calledWithExactly('http://127.0.0.1/path'));
+                    assert.isTrue(getAgentSpy.returned(requester._httpAgent));
                 });
         });
+    });
+
+    it('request with HTTPS protocol', () => {
+        const requestStubResponse = {
+            statusCode: 200,
+            request: {
+                href: 'https://127.0.0.1/path'
+            },
+        };
+
+        const requestStubResponseBody = {
+            data: {value: 321},
+        };
+
+        const expectedResponse = {
+            response: _.cloneDeep(requestStubResponse),
+            responseBody: _.cloneDeep(requestStubResponseBody)
+        };
+
+        const expectedRequestStubOpts = {
+            method: 'POST',
+            timeout: 30000,
+            url: 'https://127.0.0.1/path',
+            json: true,
+            body: null,
+            lookup: lookup,
+            family: 4,
+            agent: requester._getAgent('https://127.0.0.1/path'),
+            time: false
+        };
+
+        requester._getAgent.resetHistory();
+        requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
+
+        return requester.postJsonRequest('https://127.0.0.1/path', null)
+            .then(response => {
+                assert.isTrue(requestStub.calledOnce);
+                assert.deepEqual(requestStub.firstCall.args[0], expectedRequestStubOpts);
+                assert.isObject(response);
+                assert.deepEqual(response, expectedResponse);
+                assert.isTrue(assertResponseStub.calledOnce);
+                assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
+                assert.isTrue(getAgentSpy.calledOnce);
+                assert.isTrue(getAgentSpy.calledWithExactly('https://127.0.0.1/path'));
+                assert.isTrue(getAgentSpy.returned(requester._httpsAgent));
+            });
     });
 
     it('throws on failed assertResponse', () => {
@@ -180,6 +232,9 @@ describe('Unit: Requester::postJsonRequest', () => {
                 assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
                 assert.instanceOf(error, InvalidResponseFormatError);
                 assert.deepEqual(expectedAssertErr, error);
+                assert.isTrue(getAgentSpy.calledOnce);
+                assert.isTrue(getAgentSpy.calledWithExactly('http://127.0.0.1/path'));
+                assert.isTrue(getAgentSpy.returned(requester._httpAgent));
             });
     });
 });

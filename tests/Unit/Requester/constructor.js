@@ -2,8 +2,6 @@ const _ = require('lodash');
 const {assert} = require('chai');
 const dataDriven = require('data-driven');
 
-const {Agent} = require('http');
-
 const Requester = require('src/Requester');
 
 describe('Unit: constructor', () => {
@@ -16,7 +14,8 @@ describe('Unit: constructor', () => {
         assert.strictEqual(requester.getTiming(), false);
         assert.deepEqual(requester.getAgentOptions(), {});
         assert.deepEqual(requester.getAgentOptions(), {});
-        assert.instanceOf(requester._agent, Agent);
+        assert.strictEqual(requester._httpAgent, null);
+        assert.strictEqual(requester._httpsAgent, null);
     });
 
     it('valid empty config', function () {
@@ -26,7 +25,8 @@ describe('Unit: constructor', () => {
         assert.strictEqual(requester.getTimeout(), expectedDefaultTimeout);
         assert.strictEqual(requester.getTiming(), false);
         assert.deepEqual(requester.getAgentOptions(), {});
-        assert.instanceOf(requester._agent, Agent);
+        assert.strictEqual(requester._httpAgent, null);
+        assert.strictEqual(requester._httpsAgent, null);
     });
 
     it('valid full config', function () {
@@ -47,7 +47,8 @@ describe('Unit: constructor', () => {
         assert.strictEqual(requester.getTimeout(), config.timeoutMsecs);
         assert.strictEqual(requester.getTiming(), config.timing);
         assert.deepEqual(requester.getAgentOptions(), config.agentOptions);
-        assert.instanceOf(requester._agent, Agent);
+        assert.strictEqual(requester._httpAgent, null);
+        assert.strictEqual(requester._httpsAgent, null);
     });
 
     const invalidConfigTypePayload = [null, true, '123', ['a', 'b'], () => {}, Symbol()].map((type) => {
