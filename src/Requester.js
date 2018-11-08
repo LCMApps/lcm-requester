@@ -34,7 +34,7 @@ function promisifiedRequest(options) {
 }
 
 function assertTimeout(timeoutMsecs, propertyName = 'timeoutMsecs') {
-    if (timeoutMsecs !== undefined && !Number.isSafeInteger(timeoutMsecs) || timeoutMsecs < 0) {
+    if (timeoutMsecs !== undefined && !Number.isSafeInteger(timeoutMsecs) || timeoutMsecs <= 0) {
         throw new TypeError(`${propertyName} must be a positive integer`);
     }
 }
