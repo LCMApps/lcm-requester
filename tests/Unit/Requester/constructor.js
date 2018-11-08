@@ -84,13 +84,14 @@ describe('Unit: constructor', () => {
     });
 
     const invalidTimeoutMsecsValuePayload = [
-        {type: 'negative int', value: -1},
-        {type: 'not int but number', value: 1.2},
-        {type: 'Infinity', value: Infinity}
+        {value: 0},
+        {value: -1},
+        {value: 1.2},
+        {value: Infinity}
     ];
 
     dataDriven(invalidTimeoutMsecsValuePayload, function () {
-        it('incorrect type of config.timeoutMsecs, type = {type}', function (arg) {
+        it('incorrect value of config.timeoutMsecs, value = {value}', function (arg) {
             assert.throws(
                 function () {
                     new Requester({timeoutMsecs: arg.value});
