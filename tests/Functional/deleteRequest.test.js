@@ -5,15 +5,14 @@ const getPort = require('get-port');
 const {assert} = require('chai');
 const dataDriven = require('data-driven');
 
-const GlobalSettings = require('src/GlobalSettings');
-const SupportedMethodsInitializer = require('src/SupportedMethods');
-const {RequestError} = require('src/Error');
+const Requester = require('src/Requester');
+const {RequestError} = require('src/Error/index');
 
-const globaSettings = new GlobalSettings();
-const {deleteRequest} = SupportedMethodsInitializer(globaSettings);
 
-describe('Functional: SupportedMethods::deleteRequest', () => {
+describe('Functional: Requester::deleteRequest', () => {
     describe('nock based', () => {
+        const requester = new Requester();
+
         before(() => {
             nock.disableNetConnect();
         });
@@ -49,7 +48,7 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
                         'Content-Type': 'application/json'
                     });
 
-                return deleteRequest('http://127.0.0.1/path', {}, requestJson)
+                return requester.deleteRequest('http://127.0.0.1/path', {}, requestJson)
                     .then(response => {
                         nockInstance.done();
                         assert.property(response, 'response');
@@ -70,7 +69,7 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
                 .query(_.cloneDeep(expectedQueryString))
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return deleteRequest('http://127.0.0.1/path')
+            return requester.deleteRequest('http://127.0.0.1/path')
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -90,7 +89,7 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
                 .query(_.cloneDeep(expectedQueryString))
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return deleteRequest('http://127.0.0.1/path?arg1=val1', undefined, {field: 'value'})
+            return requester.deleteRequest('http://127.0.0.1/path?arg1=val1', undefined, {field: 'value'})
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -110,7 +109,7 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
                 .query(_.cloneDeep(expectedQueryString))
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return deleteRequest('http://127.0.0.1/path?arg1=valinuri', {arg1: 'val1'}, {field: 'value'})
+            return requester.deleteRequest('http://127.0.0.1/path?arg1=valinuri', {arg1: 'val1'}, {field: 'value'})
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -130,7 +129,7 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
                 .query(_.cloneDeep(expectedQueryString))
                 .reply(400, _.cloneDeep(expectedResponse));
 
-            return deleteRequest('http://127.0.0.1/path', {}, {})
+            return requester.deleteRequest('http://127.0.0.1/path', {}, {})
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -151,7 +150,7 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
                 .query(_.cloneDeep(expectedQueryString))
                 .replyWithError(expectedErrorMessage);
 
-            return deleteRequest('http://127.0.0.1/path', {}, {})
+            return requester.deleteRequest('http://127.0.0.1/path', {}, {})
                 .catch(error => {
                     nockInstance.done();
                     assert.instanceOf(error, expectedErrorType);
@@ -168,6 +167,7 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
          * our own implementation
          */
 
+        const requester = new Requester();
         const serverTimeout = 200;
         let serverPort;
         let server;
@@ -193,13 +193,13 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
             server.close(done);
         });
 
-        it('request with timeout wasnt reached', function () {
+        it('request with timeout wasn`t reached', function () {
             this.slow(serverTimeout * 3);
 
             const timeoutMsec = serverTimeout + Math.round(serverTimeout / 2);
             const expectedResponse = {data: null};
 
-            return deleteRequest(`http://127.0.0.1:${serverPort}/path`, undefined, timeoutMsec)
+            return requester.deleteRequest(`http://127.0.0.1:${serverPort}/path`, undefined, timeoutMsec)
                 .then(response => {
                     assert.property(response, 'response');
                     assert.property(response, 'responseBody');
@@ -212,10 +212,82 @@ describe('Functional: SupportedMethods::deleteRequest', () => {
 
             const timeoutMsec = serverTimeout - Math.round(serverTimeout / 2);
 
-            return deleteRequest(`http://127.0.0.1:${serverPort}/path`, undefined, timeoutMsec)
+            return requester.deleteRequest(`http://127.0.0.1:${serverPort}/path`, undefined, timeoutMsec)
                 .catch(error => {
                     assert.instanceOf(error, RequestError);
                     assert.equal(error.message, 'Error happened: ESOCKETTIMEDOUT');
+                });
+        });
+    });
+
+    describe('keep-alive connection', () => {
+        let requester;
+        let serverPort;
+        let server;
+
+        before((done) => {
+            getPort()
+                .then(availablePort => {
+                    serverPort = availablePort;
+                    server = http.createServer();
+
+                    server.on('request', (request, response) => {
+                        response.setHeader('Content-Type', 'application/json');
+                        response.statusCode = 200;
+                        response.write(JSON.stringify({data: null}));
+                        response.end();
+                    });
+                    server.listen(availablePort, done);
+                });
+        });
+
+        afterEach(() => {
+            requester._httpAgent.destroy();
+        });
+
+        after((done) => {
+            server.close(done);
+        });
+
+        it('request without keep-alive connection', function () {
+            const expectedResponse = {data: null};
+            const expectedConnectionHeader = 'close';
+            const expectedAgentFreeSockets = 0;
+
+            requester = new Requester({
+                agentOptions: {
+                    keepAlive: false
+                }
+            });
+
+            return requester.deleteRequest(`http://127.0.0.1:${serverPort}/path`, {})
+                .then(response => {
+                    assert.property(response, 'response');
+                    assert.property(response, 'responseBody');
+                    assert.deepEqual(response.responseBody, expectedResponse);
+                    assert.strictEqual(response.response.headers.connection, expectedConnectionHeader);
+                    assert.lengthOf(Object.keys(requester._httpAgent.freeSockets), expectedAgentFreeSockets);
+                });
+        });
+
+        it('request with keep-alive connection', function () {
+            const expectedResponse = {data: null};
+            const expectedConnectionHeader = 'keep-alive';
+            const expectedAgentFreeSockets = 1;
+
+            requester = new Requester({
+                agentOptions: {
+                    keepAlive: true
+                }
+            });
+
+            return requester.deleteRequest(`http://127.0.0.1:${serverPort}/path`, {})
+                .then(response => {
+                    assert.property(response, 'response');
+                    assert.property(response, 'responseBody');
+                    assert.deepEqual(response.responseBody, expectedResponse);
+                    assert.strictEqual(response.response.headers.connection, expectedConnectionHeader);
+                    assert.lengthOf(Object.keys(requester._httpAgent.freeSockets), expectedAgentFreeSockets);
                 });
         });
     });

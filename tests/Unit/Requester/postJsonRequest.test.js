@@ -5,34 +5,34 @@ const {assert} = require('chai');
 const proxyquire = require('proxyquire').noCallThru();
 const {lookup} = require('dns-lookup-cache');
 
-const testData = require('tests/Unit/SupportedMethods/postJsonRequest.data');
-const GlobalSettings = require('src/GlobalSettings');
+const testData = require('tests/Unit/Requester/postJsonRequest.data');
 const {InvalidResponseFormatError} = require('src/Error');
-const globalSettings = new GlobalSettings();
 
 
-describe('Unit: SupportedMethods::postJsonRequest', () => {
+describe('Unit: Requester::postJsonRequest', () => {
 
     const requestStub = sinon.stub();
     const assertResponseStub = sinon.stub();
-    const SupportedMethodsInitializer = proxyquire('src/SupportedMethods', {
+    const RequesterInitializer = proxyquire('src/Requester', {
         request: requestStub,
         './ResponseAssert': {
             assertResponse: assertResponseStub
         }
     });
-    const {postJsonRequest} = SupportedMethodsInitializer(globalSettings);
+    const requester = new RequesterInitializer();
+    const getAgentSpy = sinon.spy(requester, '_getAgent');
 
     afterEach(() => {
         requestStub.reset();
         assertResponseStub.reset();
+        getAgentSpy.resetHistory();
     });
 
     it('params must be explicitly specified', () => {
         const expectedErrType = TypeError;
         const expectedErrMessage = 'Request body must be explicitly specified';
 
-        return postJsonRequest('http://127.0.0.1/path')
+        return requester.postJsonRequest('http://127.0.0.1/path')
             .then(() => {
                 assert.fail('called', 'must not be called');
             })
@@ -48,7 +48,7 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
             const expectedErrType = TypeError;
             const expectedErrMessage = 'params must be serializable value';
 
-            return postJsonRequest('http://127.0.0.1/path', ctx.value)
+            return requester.postJsonRequest('http://127.0.0.1/path', ctx.value)
                 .then(() => {
                     assert.fail('called', 'must not be called');
                 })
@@ -61,11 +61,11 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
     });
 
     dataDriven(_.cloneDeep(testData.invalidTimeoutType), () => {
-        it('timeout must be a positive int, but {type} was passed', ctx => {
+        it('timeoutMsecs must be a positive int, but {type} was passed', ctx => {
             const expectedErrType = TypeError;
-            const expectedErrMessage = 'timeout must be a positive integer';
+            const expectedErrMessage = 'timeoutMsecs must be a positive integer';
 
-            return postJsonRequest('http://127.0.0.1/path', null, ctx.value)
+            return requester.postJsonRequest('http://127.0.0.1/path', null, ctx.value)
                 .then(() => {
                     assert.fail('called', 'must not be called');
                 })
@@ -77,11 +77,11 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
         });
     });
 
-    it('timeout must be a positive int, but negative int was passed', () => {
+    it('timeoutMsecs must be a positive int, but negative int was passed', () => {
         const expectedErrType = TypeError;
-        const expectedErrMessage = 'timeout must be a positive integer';
+        const expectedErrMessage = 'timeoutMsecs must be a positive integer';
 
-        return postJsonRequest('http://127.0.0.1/path', null, -1)
+        return requester.postJsonRequest('http://127.0.0.1/path', null, -1)
             .then(() => {
                 assert.fail('called', 'must not be called');
             })
@@ -92,11 +92,11 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
             });
     });
 
-    it('timeout must be a positive int, but not int was passed', () => {
+    it('timeoutMsecs must be a positive int, but not int was passed', () => {
         const expectedErrType = TypeError;
-        const expectedErrMessage = 'timeout must be a positive integer';
+        const expectedErrMessage = 'timeoutMsecs must be a positive integer';
 
-        return postJsonRequest('http://127.0.0.1/path', null, 12.34)
+        return requester.postJsonRequest('http://127.0.0.1/path', null, 12.34)
             .then(() => {
                 assert.fail('called', 'must not be called');
             })
@@ -135,12 +135,14 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
                 body: _.cloneDeep(ctx.params),
                 lookup: lookup,
                 family: 4,
+                agent: requester._getAgent('http://127.0.0.1/path'),
                 time: false
             };
 
+            requester._getAgent.resetHistory();
             requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
-            return postJsonRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
+            return requester.postJsonRequest('http://127.0.0.1/path', ctx.params, ctx.timeout)
                 .then(response => {
                     assert.isTrue(requestStub.calledOnce);
                     assert.deepEqual(requestStub.firstCall.args[0], expectedRequestStubOpts);
@@ -148,8 +150,57 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
                     assert.deepEqual(response, expectedResponse);
                     assert.isTrue(assertResponseStub.calledOnce);
                     assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
+                    assert.isTrue(getAgentSpy.calledOnce);
+                    assert.isTrue(getAgentSpy.calledWithExactly('http://127.0.0.1/path'));
+                    assert.isTrue(getAgentSpy.returned(requester._httpAgent));
                 });
         });
+    });
+
+    it('request with HTTPS protocol', () => {
+        const requestStubResponse = {
+            statusCode: 200,
+            request: {
+                href: 'https://127.0.0.1/path'
+            },
+        };
+
+        const requestStubResponseBody = {
+            data: {value: 321},
+        };
+
+        const expectedResponse = {
+            response: _.cloneDeep(requestStubResponse),
+            responseBody: _.cloneDeep(requestStubResponseBody)
+        };
+
+        const expectedRequestStubOpts = {
+            method: 'POST',
+            timeout: 30000,
+            url: 'https://127.0.0.1/path',
+            json: true,
+            body: null,
+            lookup: lookup,
+            family: 4,
+            agent: requester._getAgent('https://127.0.0.1/path'),
+            time: false
+        };
+
+        requester._getAgent.resetHistory();
+        requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
+
+        return requester.postJsonRequest('https://127.0.0.1/path', null)
+            .then(response => {
+                assert.isTrue(requestStub.calledOnce);
+                assert.deepEqual(requestStub.firstCall.args[0], expectedRequestStubOpts);
+                assert.isObject(response);
+                assert.deepEqual(response, expectedResponse);
+                assert.isTrue(assertResponseStub.calledOnce);
+                assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
+                assert.isTrue(getAgentSpy.calledOnce);
+                assert.isTrue(getAgentSpy.calledWithExactly('https://127.0.0.1/path'));
+                assert.isTrue(getAgentSpy.returned(requester._httpsAgent));
+            });
     });
 
     it('throws on failed assertResponse', () => {
@@ -175,12 +226,15 @@ describe('Unit: SupportedMethods::postJsonRequest', () => {
 
         requestStub.callsArgWith(1, undefined, requestStubResponse, requestStubResponseBody);
 
-        return postJsonRequest('http://127.0.0.1/path', null)
+        return requester.postJsonRequest('http://127.0.0.1/path', null)
             .catch(error => {
                 assert.isTrue(assertResponseStub.calledOnce);
                 assert.isTrue(assertResponseStub.firstCall.calledWithExactly(expectedResponse));
                 assert.instanceOf(error, InvalidResponseFormatError);
                 assert.deepEqual(expectedAssertErr, error);
+                assert.isTrue(getAgentSpy.calledOnce);
+                assert.isTrue(getAgentSpy.calledWithExactly('http://127.0.0.1/path'));
+                assert.isTrue(getAgentSpy.returned(requester._httpAgent));
             });
     });
 });

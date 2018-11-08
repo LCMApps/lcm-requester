@@ -5,15 +5,13 @@ const getPort = require('get-port');
 const {assert} = require('chai');
 const dataDriven = require('data-driven');
 
-const GlobalSettings = require('src/GlobalSettings');
-const SupportedMethodsInitializer = require('src/SupportedMethods');
-const {RequestError} = require('src/Error');
+const Requester = require('src/Requester');
+const {RequestError} = require('src/Error/index');
 
-const globalSettings = new GlobalSettings();
-const {postJsonRequest} = SupportedMethodsInitializer(globalSettings);
-
-describe('Functional: SupportedMethods::postJsonRequest', () => {
+describe('Functional: Requester::postJsonRequest', () => {
     describe('nock based', () => {
+        const requester = new Requester();
+
         before(() => {
             nock.cleanAll();
             nock.disableNetConnect();
@@ -45,7 +43,7 @@ describe('Functional: SupportedMethods::postJsonRequest', () => {
                         'Content-Type': 'application/json'
                     });
 
-                return postJsonRequest('http://127.0.0.1/path', requestJson)
+                return requester.postJsonRequest('http://127.0.0.1/path', requestJson)
                     .then(response => {
                         nockInstance.done();
                         assert.property(response, 'response');
@@ -65,7 +63,7 @@ describe('Functional: SupportedMethods::postJsonRequest', () => {
                 .post(expectedPath, expectedBody)
                 .reply(200, _.cloneDeep(expectedResponse));
 
-            return postJsonRequest('http://127.0.0.1/path?arg1=val1', requestJson)
+            return requester.postJsonRequest('http://127.0.0.1/path?arg1=val1', requestJson)
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -84,7 +82,7 @@ describe('Functional: SupportedMethods::postJsonRequest', () => {
                 .post(expectedPath, expectedBody)
                 .reply(400, _.cloneDeep(expectedResponse));
 
-            return postJsonRequest('http://127.0.0.1/path', requestJson)
+            return requester.postJsonRequest('http://127.0.0.1/path', requestJson)
                 .then(response => {
                     nockInstance.done();
                     assert.property(response, 'response');
@@ -104,7 +102,7 @@ describe('Functional: SupportedMethods::postJsonRequest', () => {
                 .post(expectedPath, expectedBody)
                 .replyWithError(expectedErrorMessage);
 
-            return postJsonRequest('http://127.0.0.1/path', requestJson)
+            return requester.postJsonRequest('http://127.0.0.1/path', requestJson)
                 .catch(error => {
                     nockInstance.done();
                     assert.instanceOf(error, expectedErrorType);
@@ -121,6 +119,7 @@ describe('Functional: SupportedMethods::postJsonRequest', () => {
          * our own implementation
          */
 
+        const requester = new Requester();
         const serverTimeout = 200;
         let serverPort;
         let server;
@@ -152,7 +151,7 @@ describe('Functional: SupportedMethods::postJsonRequest', () => {
             const timeoutMsec = serverTimeout + Math.round(serverTimeout / 2);
             const expectedResponse = {data: null};
 
-            return postJsonRequest(`http://127.0.0.1:${serverPort}/path`, {}, timeoutMsec)
+            return requester.postJsonRequest(`http://127.0.0.1:${serverPort}/path`, {}, timeoutMsec)
                 .then(response => {
                     assert.property(response, 'response');
                     assert.property(response, 'responseBody');
@@ -165,10 +164,82 @@ describe('Functional: SupportedMethods::postJsonRequest', () => {
 
             const timeoutMsec = serverTimeout - Math.round(serverTimeout / 2);
 
-            return postJsonRequest(`http://127.0.0.1:${serverPort}/path`, {}, timeoutMsec)
+            return requester.postJsonRequest(`http://127.0.0.1:${serverPort}/path`, {}, timeoutMsec)
                 .catch(error => {
                     assert.instanceOf(error, RequestError);
                     assert.equal(error.message, 'Error happened: ESOCKETTIMEDOUT');
+                });
+        });
+    });
+
+    describe('keep-alive connection', () => {
+        let requester;
+        let serverPort;
+        let server;
+
+        before((done) => {
+            getPort()
+                .then(availablePort => {
+                    serverPort = availablePort;
+                    server = http.createServer();
+
+                    server.on('request', (request, response) => {
+                        response.setHeader('Content-Type', 'application/json');
+                        response.statusCode = 200;
+                        response.write(JSON.stringify({data: null}));
+                        response.end();
+                    });
+                    server.listen(availablePort, done);
+                });
+        });
+
+        afterEach(() => {
+            requester._httpAgent.destroy();
+        });
+
+        after((done) => {
+            server.close(done);
+        });
+
+        it('request without keep-alive connection', function () {
+            const expectedResponse = {data: null};
+            const expectedConnectionHeader = 'close';
+            const expectedAgentFreeSockets = 0;
+
+            requester = new Requester({
+                agentOptions: {
+                    keepAlive: false
+                }
+            });
+
+            return requester.postJsonRequest(`http://127.0.0.1:${serverPort}/path`, {})
+                .then(response => {
+                    assert.property(response, 'response');
+                    assert.property(response, 'responseBody');
+                    assert.deepEqual(response.responseBody, expectedResponse);
+                    assert.strictEqual(response.response.headers.connection, expectedConnectionHeader);
+                    assert.lengthOf(Object.keys(requester._httpAgent.freeSockets), expectedAgentFreeSockets);
+                });
+        });
+
+        it('request with keep-alive connection', function () {
+            const expectedResponse = {data: null};
+            const expectedConnectionHeader = 'keep-alive';
+            const expectedAgentFreeSockets = 1;
+
+            requester = new Requester({
+                agentOptions: {
+                    keepAlive: true
+                }
+            });
+
+            return requester.postJsonRequest(`http://127.0.0.1:${serverPort}/path`, {})
+                .then(response => {
+                    assert.property(response, 'response');
+                    assert.property(response, 'responseBody');
+                    assert.deepEqual(response.responseBody, expectedResponse);
+                    assert.strictEqual(response.response.headers.connection, expectedConnectionHeader);
+                    assert.lengthOf(Object.keys(requester._httpAgent.freeSockets), expectedAgentFreeSockets);
                 });
         });
     });
