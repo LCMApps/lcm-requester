@@ -23,12 +23,16 @@ function promisifiedRequest(options) {
             }
 
             resolve({response, responseBody});
-        }).on('socket', socket => {
-            socket.on('lookup', (err, address) => {
-                if (address) {
-                    meta.remoteAddress = address;
-                }
-            });
+        }).once('socket', socket => {
+            if (socket.remoteAddress) {
+                meta.remoteAddress = socket.remoteAddress;
+            } else {
+                socket.once('lookup', (err, address) => {
+                    if (address) {
+                        meta.remoteAddress = address;
+                    }
+                });
+            }
         });
     });
 }
