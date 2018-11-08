@@ -1,6 +1,6 @@
 {
   "name": "lcm-requester",
-  "version": "3.0.0",
+  "version": "2.2.1",
   "description": "lcm-requster is a wrapper on request module with validation on top of format and rules used",
   "scripts": {
     "lint": "eslint ./",

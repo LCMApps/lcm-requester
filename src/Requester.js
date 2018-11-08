@@ -33,8 +33,8 @@ function promisifiedRequest(options) {
     });
 }
 
-function assertPositiveInteger(value, propertyName = 'timeoutMsecs') {
-    if (value !== undefined && !Number.isSafeInteger(value) || value < 0) {
+function assertTimeout(timeoutMsecs, propertyName = 'timeoutMsecs') {
+    if (timeoutMsecs !== undefined && !Number.isSafeInteger(timeoutMsecs) || timeoutMsecs < 0) {
         throw new TypeError(`${propertyName} must be a positive integer`);
     }
 }
@@ -63,40 +63,19 @@ class Requester {
 
         this._config = config ? _.cloneDeep(config) : {};
 
-        assertPositiveInteger(this._config.timeoutMsecs, 'config.timeoutMsecs');
+        assertTimeout(this._config.timeoutMsecs, 'config.timeoutMsecs');
 
         if (this._config.timing !== undefined && !_.isBoolean(config.timing)) {
             throw new TypeError('config.timing must be a boolean');
         }
 
-        if (this._config.agentOptions !== undefined) {
-            if (!_.isPlainObject(this._config.agentOptions)) {
-                throw new TypeError('config.agentOptions must be a plain object');
-            }
-
-            if (this._config.agentOptions.keepAlive !== undefined
-                && !_.isBoolean(this._config.agentOptions.keepAlive)
-            ) {
-                throw new TypeError('config.agentOptions.keepAlive must be a boolean');
-            }
-
-            assertPositiveInteger(this._config.agentOptions.keepAliveMsecs, 'config.agentOptions.keepAliveMsecs');
-
-            if (this._config.agentOptions.maxSockets !== undefined && !_.isNumber(this._config.agentOptions.maxSockets)
-                || ((!Number.isSafeInteger(this._config.agentOptions.maxSockets)
-                    || this._config.agentOptions.maxSockets < 0)
-                    && Number.isFinite(this._config.agentOptions.maxSockets))
-            ) {
-                throw new TypeError('config.agentOptions.maxSockets must be a positive integer or Infinity');
-            }
-
-            assertPositiveInteger(this._config.agentOptions.maxFreeSockets, 'config.agentOptions.maxFreeSockets');
-            assertPositiveInteger(this._config.agentOptions.timeout, 'config.agentOptions.timeout');
+        if (this._config.agentOptions !== undefined && !_.isPlainObject(this._config.agentOptions)) {
+            throw new TypeError('config.agentOptions must be a plain object');
         }
 
         this._timeoutMsecs = this._config.timeoutMsecs || DEFAULT_REQUEST_TIMEOUT;
         this._timing = this._config.timing || false;
-        this._agentOptions = this._config.agentOptions ? _.cloneDeep(this._config.agentOptions) : {};
+        this._agentOptions = this._config.agentOptions || {};
         this._httpAgent = null;
         this._httpsAgent = null;
     }
@@ -117,7 +96,7 @@ class Requester {
         return Promise.resolve()
             .then(() => {
                 const timeout = timeoutMsecs ? timeoutMsecs : this._timeoutMsecs;
-                assertPositiveInteger(timeout);
+                assertTimeout(timeout);
 
                 const opts = {
                     url: url,
@@ -150,7 +129,7 @@ class Requester {
         return Promise.resolve()
             .then(() => {
                 const timeout = timeoutMsecs ? timeoutMsecs : this._timeoutMsecs;
-                assertPositiveInteger(timeout);
+                assertTimeout(timeout);
 
                 const opts = {
                     url: url,
@@ -189,7 +168,7 @@ class Requester {
         return Promise.resolve()
             .then(() => {
                 const timeout = timeoutMsecs ? timeoutMsecs : this._timeoutMsecs;
-                assertPositiveInteger(timeout);
+                assertTimeout(timeout);
 
                 const opts = {
                     url: url,
@@ -218,7 +197,7 @@ class Requester {
         return Promise.resolve()
             .then(() => {
                 const timeout = timeoutMsecs ? timeoutMsecs : this._timeoutMsecs;
-                assertPositiveInteger(timeout);
+                assertTimeout(timeout);
 
                 const opts = {
                     url: url,
