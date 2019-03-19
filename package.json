@@ -34,7 +34,7 @@
     "chai": "4.2.0",
     "coveralls": "3.0.3",
     "data-driven": "1.4.0",
-    "eslint": "5.14.1",
+    "eslint": "5.15.3",
     "get-port": "4.0.0",
     "istanbul": "0.4.5",
     "mocha": "6.0.2",
