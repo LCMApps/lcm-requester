@@ -1,7 +1,7 @@
 {
   "name": "lcm-requester",
-  "version": "3.0.0",
-  "description": "lcm-requster is a wrapper on request module with validation on top of format and rules used",
+  "version": "3.0.1",
+  "description": "lcm-requester is a wrapper on request module with validation on top of format and rules used",
   "scripts": {
     "lint": "eslint ./",
     "tests": "yarn run unit-test && yarn run func-test",
