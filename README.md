@@ -17,7 +17,7 @@ Using yarn:
 $ yarn add lcm-requester
 ```
 
-#Configuration
+# Configuration
 All available transports and configuration options listed below:
 Parameter "agentOptions" support the same options like [HTTP Agent](https://nodejs.org/api/http.html#http_new_agent_options)
 or [HTTPS Agent](https://nodejs.org/api/https.html#http_new_agent_options)
